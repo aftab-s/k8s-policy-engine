@@ -8,6 +8,8 @@
 <body>
     <h1>Kubernetes Pods</h1>
 
+    <a href="{{ url_for('list_kyverno_policies') }}">List Kyverno Policies</a>
+
     <form method="post" action="{{ url_for('list_resources') }}">
         <label for="namespace">Select Namespace:</label>
         <select id="namespace" name="namespace">

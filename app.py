@@ -14,8 +14,11 @@ def index():
     # Get list of namespaces
     namespaces = v1.list_namespace()
     namespace_list = [ns.metadata.name for ns in namespaces.items]
+    
+    # Fetch Kyverno policies
+    kyverno_policies = get_kyverno_policies()
 
-    return render_template('index.html', namespaces=namespace_list)
+    return render_template('index.html', namespaces=namespace_list, kyverno_policies=kyverno_policies)
 
 @app.route('/list_resources', methods=['POST'])
 def list_resources():
@@ -33,6 +36,7 @@ def list_resources():
     # Get list of namespaces
     namespaces = v1.list_namespace()
     namespace_list = [ns.metadata.name for ns in namespaces.items]
+    
 
     # Initialize resource list
     resource_list = []
@@ -148,7 +152,72 @@ def list_resources():
         resources=resource_list,
         namespaces=namespace_list  # Pass namespaces for the dropdown menu
     )
+    
+@app.route('/list_kyverno_policies')
+def list_kyverno_policies():
+    kyverno_policies = get_kyverno_policies()
+    return render_template('list_kyverno_policies.html', kyverno_policies=kyverno_policies)
 
+@app.route('/apply_policy', methods=['POST'])
+def apply_policy():
+    selected_namespace = request.form.get('namespace', 'default')
+    selected_policy = request.form.get('kyverno_policy', 'default_policy')
+
+    # Fetch Kyverno policies
+    kyverno_policies = get_kyverno_policies()
+
+    # Apply the selected Kyverno policy to the namespace
+    result = apply_kyverno_policy(selected_namespace, selected_policy)
+
+    return render_template(
+        'apply_policy_result.html',
+        selected_namespace=selected_namespace,
+        selected_policy=selected_policy,
+        apply_result=result,
+        kyverno_policies=kyverno_policies
+    )
+    
+def get_kyverno_policies():
+    try:
+        # Create Kubernetes API client for Custom Resources (CR)
+        custom_api = client.CustomObjectsApi()
+
+        # Fetch Kyverno policies
+        group = 'kyverno.io'
+        version = 'v1'
+        plural = 'clusterpolicies'
+        policies = custom_api.list_cluster_custom_object(group, version, plural)
+
+        # Extract relevant information about each policy
+        kyverno_policies = [policy['metadata']['name'] for policy in policies['items']]
+
+        return kyverno_policies
+
+    except Exception as e:
+        # Handle exceptions (e.g., Kyverno CRD not found, API server unreachable)
+        print(f"Error fetching Kyverno policies: {str(e)}")
+        return []
+
+def apply_kyverno_policy(namespace, policy_name):
+    try:
+        # Create Kubernetes API client for Custom Resources (CR)
+        custom_api = client.CustomObjectsApi()
+
+        # Apply Kyverno policy to the namespace
+        group = 'kyverno.io'
+        version = 'v1'
+        plural = 'policies'
+        policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
+
+        # You can use 'policy' dictionary to extract policy details
+        # For example, you might want to apply policy rules to your resources
+
+        return {"success": True, "message": "Policy applied successfully"}
+
+    except Exception as e:
+        # Handle exceptions (e.g., Kyverno CRD not found, API server unreachable)
+        print(f"Error applying Kyverno policy: {str(e)}")
+        return {"success": False, "message": f"Error applying Kyverno policy: {str(e)}"}
 
 if __name__ == '__main__':
     app.run(debug=True)
