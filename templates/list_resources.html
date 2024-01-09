@@ -21,6 +21,11 @@
             <option value="pods" {% if selected_tab == 'pods' %} selected {% endif %}>Pods</option>
             <option value="services" {% if selected_tab == 'services' %} selected {% endif %}>Services</option>
             <option value="deployments" {% if selected_tab == 'deployments' %} selected {% endif %}>Deployments</option>
+            <option value="configmaps" {% if selected_tab == 'configmaps' %} selected {% endif %}>ConfigMaps</option>
+            <option value="ingresses" {% if selected_tab == 'ingresses' %} selected {% endif %}>Ingresses</option>
+            <option value="secrets" {% if selected_tab == 'secrets' %} selected {% endif %}>Secrets</option>
+            <option value="applications" {% if selected_tab == 'applications' %} selected {% endif %}>Applications</option>
+            <option value="volumes" {% if selected_tab == 'volumes' %} selected {% endif %}>Volumes</option>
         </select>
 
         <input type="submit" value="List Resources">
@@ -41,6 +46,22 @@
                 <th>Name</th>
                 <th>Replicas</th>
                 <th>Namespace</th>
+            {% elif selected_tab == 'configmaps' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'ingresses' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'secrets' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'applications' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'volumes' %}
+                <th>Name</th>
+                <th>Capacity</th>
+                <th>Namespace</th>
             {% endif %}
         </tr>
         {% for resource in resources %}
@@ -56,6 +77,22 @@
                 {% elif selected_tab == 'deployments' %}
                     <td>{{ resource.name }}</td>
                     <td>{{ resource.replicas }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'configmaps' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'ingresses' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'secrets' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'applications' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'volumes' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.capacity }}</td>
                     <td>{{ resource.namespace }}</td>
                 {% endif %}
             </tr>

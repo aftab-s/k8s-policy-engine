@@ -22,6 +22,9 @@ def list_resources():
     # Create Kubernetes API client
     v1 = client.CoreV1Api()
     apps_v1 = client.AppsV1Api()
+    core_v1 = client.CoreV1Api()
+    networking_v1 = client.NetworkingV1Api()  # Use NetworkingV1Api instead of NetworkingV1beta1Api
+    argo_v1 = client.CustomObjectsApi()
 
     # Get selected namespace and tab from the form
     selected_namespace = request.form.get('namespace', 'default')
@@ -72,6 +75,71 @@ def list_resources():
                 'namespace': deployment.metadata.namespace,
             }
             resource_list.append(deployment_info)
+
+    elif selected_tab == 'configmaps':
+        # Get list of ConfigMaps in the selected namespace
+        configmaps = core_v1.list_namespaced_config_map(selected_namespace)
+
+        # Extract relevant information about each ConfigMap
+        for configmap in configmaps.items:
+            configmap_info = {
+                'name': configmap.metadata.name,
+                'namespace': configmap.metadata.namespace,
+            }
+            resource_list.append(configmap_info)
+
+    elif selected_tab == 'ingresses':
+        # Get list of Ingresses in the selected namespace
+        ingresses = networking_v1.list_namespaced_ingress(selected_namespace)
+
+        # Extract relevant information about each Ingress
+        for ingress in ingresses.items:
+            ingress_info = {
+                'name': ingress.metadata.name,
+                'namespace': ingress.metadata.namespace,
+            }
+            resource_list.append(ingress_info)
+
+    elif selected_tab == 'secrets':
+        # Get list of Secrets in the selected namespace
+        secrets = core_v1.list_namespaced_secret(selected_namespace)
+
+        # Extract relevant information about each Secret
+        for secret in secrets.items:
+            secret_info = {
+                'name': secret.metadata.name,
+                'namespace': secret.metadata.namespace,
+            }
+            resource_list.append(secret_info)
+
+    elif selected_tab == 'applications':
+        # Get list of Applications using Argo CD API
+        group = 'argoproj.io'
+        version = 'v1alpha1'
+        plural = 'applications'
+        field_selector = f'metadata.namespace={selected_namespace}'
+        applications = argo_v1.list_namespaced_custom_object(group, version, selected_namespace, plural, field_selector=field_selector)
+
+        # Extract relevant information about each Application
+        for application in applications['items']:
+            application_info = {
+                'name': application['metadata']['name'],
+                'namespace': application['metadata']['namespace'],
+            }
+            resource_list.append(application_info)
+
+    elif selected_tab == 'volumes':
+        # Get list of PersistentVolumes in the cluster
+        volumes = core_v1.list_persistent_volume()
+
+        # Extract relevant information about each PersistentVolume
+        for volume in volumes.items:
+            volume_info = {
+                'name': volume.metadata.name,
+                'capacity': volume.spec.capacity,
+                'namespace': volume.metadata.namespace,
+            }
+            resource_list.append(volume_info)
 
     return render_template(
         'list_resources.html',
