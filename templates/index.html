@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Pods</title>
+</head>
+<body>
+    <h1>Kubernetes Pods</h1>
+
+    <form method="post" action="{{ url_for('list_resources') }}">
+        <label for="namespace">Select Namespace:</label>
+        <select id="namespace" name="namespace">
+            {% for ns in namespaces %}
+                <option value="{{ ns }}">{{ ns }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="List Pods">
+    </form>
+
+    <h2>Pods in {{ selected_namespace }}</h2>
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Namespace</th>
+        </tr>
+        {% for pod in pods %}
+        <tr>
+            <td>{{ pod.name }}</td>
+            <td>{{ pod.status }}</td>
+            <td>{{ pod.namespace }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
