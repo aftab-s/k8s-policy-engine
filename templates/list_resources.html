@@ -3,71 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Kubernetes Resources</title>
 </head>
 <body>
-    <h1>{{ title }}</h1>
+    <h1>Kubernetes Resources</h1>
 
     <form method="post" action="{{ url_for('list_resources') }}">
         <label for="namespace">Select Namespace:</label>
         <select id="namespace" name="namespace">
             {% for ns in namespaces %}
-                <option value="{{ ns }}" {% if ns == selected_namespace %}selected{% endif %}>{{ ns }}</option>
+                <option value="{{ ns }}" {% if ns == selected_namespace %} selected {% endif %}>{{ ns }}</option>
             {% endfor %}
         </select>
 
         <label for="tab">Select Tab:</label>
         <select id="tab" name="tab">
-            <option value="pods" {% if selected_tab == 'pods' %}selected{% endif %}>Pods</option>
-            <option value="services" {% if selected_tab == 'services' %}selected{% endif %}>Services</option>
-            <option value="deployments" {% if selected_tab == 'deployments' %}selected{% endif %}>Deployments</option>
+            <option value="pods" {% if selected_tab == 'pods' %} selected {% endif %}>Pods</option>
+            <option value="services" {% if selected_tab == 'services' %} selected {% endif %}>Services</option>
+            <option value="deployments" {% if selected_tab == 'deployments' %} selected {% endif %}>Deployments</option>
         </select>
 
         <input type="submit" value="List Resources">
     </form>
 
-    <h2>{{ title }}</h2>
+    <h2>{{ selected_tab | capitalize }} in {{ selected_namespace }}</h2>
     <table border="1">
-        {% if selected_tab == 'pods' %}
-            <tr>
+        <tr>
+            {% if selected_tab == 'pods' %}
                 <th>Name</th>
                 <th>Status</th>
                 <th>Namespace</th>
-            </tr>
-            {% for resource in resources %}
-                <tr>
-                    <td>{{ resource.name }}</td>
-                    <td>{{ resource.status }}</td>
-                    <td>{{ resource.namespace }}</td>
-                </tr>
-            {% endfor %}
-        {% elif selected_tab == 'services' %}
-            <tr>
+            {% elif selected_tab == 'services' %}
                 <th>Name</th>
                 <th>Type</th>
                 <th>Namespace</th>
-            </tr>
-            {% for resource in resources %}
-                <tr>
-                    <td>{{ resource.name }}</td>
-                    <td>{{ resource.type }}</td>
-                    <td>{{ resource.namespace }}</td>
-                </tr>
-            {% endfor %}
-        {% elif selected_tab == 'deployments' %}
-            <tr>
+            {% elif selected_tab == 'deployments' %}
                 <th>Name</th>
                 <th>Replicas</th>
                 <th>Namespace</th>
-            </tr>
-            {% for resource in resources %}
-                <tr>
+            {% endif %}
+        </tr>
+        {% for resource in resources %}
+            <tr>
+                {% if selected_tab == 'pods' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.status }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'services' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.type }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'deployments' %}
                     <td>{{ resource.name }}</td>
                     <td>{{ resource.replicas }}</td>
                     <td>{{ resource.namespace }}</td>
-                </tr>
-            {% endfor %}
-        {% endif %}
+                {% endif %}
+            </tr>
+        {% endfor %}
     </table>
 </body>
 </html>
