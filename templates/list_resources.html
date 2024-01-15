@@ -35,11 +35,11 @@
         <label for="kyverno_policy">Select Kyverno Policy:</label>
         <select id="kyverno_policy" name="kyverno_policy">
             {% for policy in kyverno_policies %}
-                <option value="{{ policy }}" {% if policy == selected_policy %} selected {% endif %}>{{ policy }}</option>
+                <option value="{{ policy }}">{{ policy }}</option>
             {% endfor %}
         </select>
         <input type="submit" value="Apply Policy">
-    </form>
+    </form>    
 
     <h2>{{ selected_tab | capitalize }} in {{ selected_namespace }}</h2>
     <table border="1">

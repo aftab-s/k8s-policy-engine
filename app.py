@@ -37,6 +37,8 @@ def list_resources():
     namespaces = v1.list_namespace()
     namespace_list = [ns.metadata.name for ns in namespaces.items]
     
+    kyverno_policies = get_kyverno_policies()
+    
 
     # Initialize resource list
     resource_list = []
@@ -150,9 +152,11 @@ def list_resources():
         selected_namespace=selected_namespace,
         selected_tab=selected_tab,
         resources=resource_list,
-        namespaces=namespace_list  # Pass namespaces for the dropdown menu
+        namespaces=namespace_list,  # Pass namespaces for the dropdown menu
+        kyverno_policies=kyverno_policies
     )
     
+
 @app.route('/list_kyverno_policies')
 def list_kyverno_policies():
     kyverno_policies = get_kyverno_policies()
@@ -189,7 +193,8 @@ def get_kyverno_policies():
         policies = custom_api.list_cluster_custom_object(group, version, plural)
 
         # Extract relevant information about each policy
-        kyverno_policies = [policy['metadata']['name'] for policy in policies['items']]
+        kyverno_policies = [policy['metadata']['name'] for policy in policies.get('items', [])]
+        print(f"Fetched Kyverno policies: {kyverno_policies}")
 
         return kyverno_policies
 
