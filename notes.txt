@@ -18,7 +18,7 @@ metadata:
       due to Pod controllers need to specify the `namespace` field under the top-level `metadata`
       object and not at the Pod template level.      
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Enforce # if it is set to "Audit" it'll just log the process and not actually prevent resources from being created.
   background: true
   rules:
   - name: validate-namespace

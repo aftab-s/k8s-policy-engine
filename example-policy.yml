@@ -1,0 +1,18 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: example-policy
+spec:
+  rules:
+    - name: validate-pod
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Pods are not allowed."
+        deny:
+          conditions:
+            - key: "true"
+              operator: "Equals"
+              value: "false"
