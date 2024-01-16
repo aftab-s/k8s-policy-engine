@@ -1,3 +1,5 @@
+import os
+import yaml
 from flask import Flask, render_template, request
 from kubernetes import client, config
 
@@ -5,6 +7,9 @@ app = Flask(__name__)
 
 # Load Kubernetes configuration from default kubeconfig file
 config.load_kube_config()
+
+# Specifying the directory containing Kyverno policies YAML files
+POLICIES_DIRECTORY = "policies"
 
 @app.route('/')
 def index():
@@ -16,7 +21,7 @@ def index():
     namespace_list = [ns.metadata.name for ns in namespaces.items]
     
     # Fetch Kyverno policies
-    kyverno_policies = get_kyverno_policies()
+    kyverno_policies = kyverno_policies = get_yaml_policy_names(POLICIES_DIRECTORY)
 
     return render_template('index.html', namespaces=namespace_list, kyverno_policies=kyverno_policies)
 
@@ -37,7 +42,7 @@ def list_resources():
     namespaces = v1.list_namespace()
     namespace_list = [ns.metadata.name for ns in namespaces.items]
     
-    kyverno_policies = get_kyverno_policies()
+    kyverno_policies = get_yaml_policy_names(POLICIES_DIRECTORY)
     
 
     # Initialize resource list
@@ -155,11 +160,29 @@ def list_resources():
         namespaces=namespace_list,  # Pass namespaces for the dropdown menu
         kyverno_policies=kyverno_policies
     )
+
+def get_yaml_policy_names(directory):
+    try:
+        # Get list of files in the specified directory
+        files = [f for f in os.listdir(directory) if f.endswith(".yaml")]
+
+        # Extract policy names from file names
+        policy_names = [os.path.splitext(os.path.basename(file))[0] for file in files]
+
+        print(f"Fetched Kyverno policies from YAML files: {policy_names}")
+
+        return policy_names
+
+    except Exception as e:
+        # Handle exceptions (e.g., directory not found, file read error)
+        print(f"Error fetching Kyverno policies from YAML files: {str(e)}")
+        return []
     
 
 @app.route('/list_kyverno_policies')
 def list_kyverno_policies():
-    kyverno_policies = get_kyverno_policies()
+    kyverno_policies = get_yaml_policy_names(POLICIES_DIRECTORY)
+    print(f"Kyverno policies passed to frontend: {kyverno_policies}")
     return render_template('list_kyverno_policies.html', kyverno_policies=kyverno_policies)
 
 @app.route('/apply_policy', methods=['POST'])
