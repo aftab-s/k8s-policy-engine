@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Policy Result</title>
+</head>
+<body>
+    <h1>Apply Policy Result</h1>
+
+    <p>Selected Namespace: {{ selected_namespace }}</p>
+    <p>Selected Policy: {{ selected_policy }}</p>
+
+    {% if apply_result.success %}
+        <p style="color: green;">{{ apply_result.message }}</p>
+    {% else %}
+        <p style="color: red;">{{ apply_result.message }}</p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Kyverno Policies:</h2>
+    <ul>
+        {% for policy in kyverno_policies %}
+            <li>{{ policy }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

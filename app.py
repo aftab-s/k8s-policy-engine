@@ -1,7 +1,9 @@
 import os
 import yaml
+import subprocess
 from flask import Flask, render_template, request
 from kubernetes import client, config
+from flask import redirect, url_for
 
 app = Flask(__name__)
 
@@ -192,17 +194,29 @@ def apply_policy():
 
     # Fetch Kyverno policies
     kyverno_policies = get_kyverno_policies()
+    
+    command = f"kubectl apply -f {POLICIES_DIRECTORY}/{selected_policy}.yaml"
+    subprocess.run(command, shell=True, check=True)
+
+    # Fetch Kyverno policy details after applying
+    # policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
+    print(f"Fetched Kyverno policy details: {selected_policy}")
+
+    return {"success": True, "message": "Policy applied successfully"}
+    
+    # Apply the selected Kyverno policy to the namespace
+    # apply_kyverno_policy(selected_namespace, selected_policy)
 
     # Apply the selected Kyverno policy to the namespace
-    result = apply_kyverno_policy(selected_namespace, selected_policy)
+    # result = apply_kyverno_policy(selected_namespace, selected_policy)
 
-    return render_template(
-        'apply_policy_result.html',
-        selected_namespace=selected_namespace,
-        selected_policy=selected_policy,
-        apply_result=result,
-        kyverno_policies=kyverno_policies
-    )
+    # return render_template(
+    #     'apply_policy_result.html',
+    #     selected_namespace=selected_namespace,
+    #     selected_policy=selected_policy,
+    #     apply_result=result,
+    #     kyverno_policies=kyverno_policies
+    # )
     
 def get_kyverno_policies():
     try:
@@ -229,20 +243,31 @@ def get_kyverno_policies():
 def apply_kyverno_policy(namespace, policy_name):
     try:
         # Create Kubernetes API client for Custom Resources (CR)
+        print("Applying Kyverno policy function called!")
         custom_api = client.CustomObjectsApi()
 
         # Apply Kyverno policy to the namespace
         group = 'kyverno.io'
         version = 'v1'
         plural = 'policies'
-        policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
 
-        # You can use 'policy' dictionary to extract policy details
-        # For example, you might want to apply policy rules to your resources
+        # Print debugging information
+        print(f"Applying Kyverno policy: {policy_name}")
+
+        # Use the correct function parameters here
+        # Before the subprocess.run command in apply_kyverno_policy function
+        print(f"Applying Kyverno policy file: {POLICIES_DIRECTORY}/{policy_name}.yaml")
+
+        command = f"kubectl apply -f {POLICIES_DIRECTORY}/{policy_name}.yaml"
+        subprocess.run(command, shell=True, check=True)
+
+        # Fetch Kyverno policy details after applying
+        policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
+        print(f"Fetched Kyverno policy details: {policy}")
 
         return {"success": True, "message": "Policy applied successfully"}
 
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         # Handle exceptions (e.g., Kyverno CRD not found, API server unreachable)
         print(f"Error applying Kyverno policy: {str(e)}")
         return {"success": False, "message": f"Error applying Kyverno policy: {str(e)}"}
