@@ -1,9 +1,8 @@
 import os, json
-import yaml
 import subprocess
 from flask import Flask, render_template, request, jsonify
 from kubernetes import client, config
-from flask import redirect, url_for
+from flask import url_for
 
 app = Flask(__name__)
 
@@ -159,7 +158,7 @@ def list_resources():
         selected_namespace=selected_namespace,
         selected_tab=selected_tab,
         resources=resource_list,
-        namespaces=namespace_list,  # Pass namespaces for the dropdown menu
+        namespaces=namespace_list,
         kyverno_policies=kyverno_policies
     )
 
@@ -189,32 +188,23 @@ def list_kyverno_policies():
 
 @app.route('/apply_policy', methods=['POST'])
 def apply_policy():
-    selected_namespace = request.form.get('namespace', 'default')
     selected_policy = request.form.get('kyverno_policy', 'default_policy')
-
-    # Fetch Kyverno policies
-    kyverno_policies = get_kyverno_policies()
-    
+     
     command = f"kubectl apply -f {POLICIES_DIRECTORY}/{selected_policy}.yaml"
     subprocess.run(command, shell=True, check=True)
 
     # Fetch Kyverno policy details after applying
-    # policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
     print(f"Fetched Kyverno policy details: {selected_policy}")
+    
+    applied_policies = get_applied_kyverno_policies()
 
-    response = {
-        "success": True,
-        "message": "Policy applied successfully",
-        "redirect": url_for('applied_policies')
-    }
-
-    return jsonify(response)
+    return render_template('applied_policies.html', applied_policies=applied_policies)
     
 @app.route('/applied_policies')
 def applied_policies():
     # Fetch applied Kyverno policies (you need to implement this function)
     applied_policies = get_applied_kyverno_policies()
-
+    
     return render_template('applied_policies.html', applied_policies=applied_policies)
 
 def get_applied_kyverno_policies():
@@ -240,20 +230,24 @@ def get_applied_kyverno_policies():
 
 @app.route('/delete_policy', methods=['POST'])
 def delete_policy():
-    selected_namespace = request.form.get('namespace', 'default')
+    
     selected_policy = request.form.get('kyverno_policy', 'default_policy')
 
     # Fetch Kyverno policies
-    kyverno_policies = get_kyverno_policies()
     
     command = f"kubectl delete -f {POLICIES_DIRECTORY}/{selected_policy}.yaml"
     subprocess.run(command, shell=True, check=True)
 
     # Fetch Kyverno policy details after applying
-    # policy = custom_api.get_namespaced_custom_object(group, version, namespace, plural, policy_name)
     print(f"Fetched Kyverno policy details: {selected_policy}")
 
-    return {"success": True, "message": "Policy deleted successfully"}
+    response = {
+        "success": True,
+        "message": "Policy deleted successfully",
+        "redirect": url_for('applied_policies')
+    }
+
+    return jsonify(response)
     
 def get_kyverno_policies():
     try:
