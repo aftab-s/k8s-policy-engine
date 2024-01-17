@@ -1,0 +1,38 @@
+<!-- applied_policies.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applied Kyverno Policies</title>
+</head>
+<body>
+    <h1>Applied Kyverno Policies</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Cluster Name</th>
+                <th>Policy Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for policy in applied_policies %}
+                <tr>
+                    <td>{{ policy.cluster_name }}</td>
+                    <td>{{ policy.name }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('delete_policy') }}">
+                            <input type="hidden" name="namespace" value="{{ policy.namespace }}">
+                            <input type="hidden" name="kyverno_policy" value="{{ policy.name }}">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
