@@ -1,0 +1,91 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #0366d6; /* GitHub blue color */
+}
+
+form {
+    margin: 20px auto;
+    text-align: center;
+}
+
+/* Container for inline elements */
+.inline-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px; /* Slightly increased margin for better separation */
+}
+
+/* Adjusted select and input styles for inline alignment */
+select, input[type="submit"] {
+    padding: 10px;
+    font-size: 16px;
+    margin-right: 10px; /* Add space between select elements */
+}
+
+select {
+    width: auto; /* Allow the select element to shrink to its content */
+}
+
+table {
+    width: 90%; /* Increased width for a wider appearance */
+    margin: 20px auto;
+    border-collapse: collapse;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Increased box-shadow for depth */
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #0366d6; /* GitHub blue color */
+    color: white;
+}
+
+tr:hover {
+    background-color: #f0f8ff; /* Light blue on hover */
+}
+
+/* Zebra striping */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Adjust form and table widths for better alignment */
+@media (max-width: 600px) {
+    form, table {
+        width: 100%;
+    }
+
+    .inline-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    select, input[type="submit"] {
+        width: 100%; /* On smaller screens, make the select and submit elements fill the entire width */
+        margin-right: 0; /* Remove margin on smaller screens */
+        margin-bottom: 8px; /* Add a bottom margin for separation */
+    }
+}
+
+/* Add left margin to h2 */
+h2 {
+    margin-left: 80px;
+}

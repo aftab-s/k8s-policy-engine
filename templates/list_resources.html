@@ -4,42 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kubernetes Resources</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles_list_resources.css') }}">
 </head>
 <body>
     <h1>Kubernetes Resources</h1>
 
-    <form method="post" action="{{ url_for('list_resources') }}">
-        <label for="namespace">Select Namespace:</label>
-        <select id="namespace" name="namespace">
-            {% for ns in namespaces %}
-                <option value="{{ ns }}" {% if ns == selected_namespace %} selected {% endif %}>{{ ns }}</option>
-            {% endfor %}
-        </select>
+    <div class="inline-container">
+        <form method="post" action="{{ url_for('list_resources') }}">
+            <label for="namespace">Select Namespace:</label>
+            <select id="namespace" name="namespace">
+                {% for ns in namespaces %}
+                    <option value="{{ ns }}" {% if ns == selected_namespace %} selected {% endif %}>{{ ns }}</option>
+                {% endfor %}
+            </select>
 
-        <label for="tab">Select Tab:</label>
-        <select id="tab" name="tab">
-            <option value="pods" {% if selected_tab == 'pods' %} selected {% endif %}>Pods</option>
-            <option value="services" {% if selected_tab == 'services' %} selected {% endif %}>Services</option>
-            <option value="deployments" {% if selected_tab == 'deployments' %} selected {% endif %}>Deployments</option>
-            <option value="configmaps" {% if selected_tab == 'configmaps' %} selected {% endif %}>ConfigMaps</option>
-            <option value="ingresses" {% if selected_tab == 'ingresses' %} selected {% endif %}>Ingresses</option>
-            <option value="secrets" {% if selected_tab == 'secrets' %} selected {% endif %}>Secrets</option>
-            <option value="applications" {% if selected_tab == 'applications' %} selected {% endif %}>Applications</option>
-            <option value="volumes" {% if selected_tab == 'volumes' %} selected {% endif %}>Volumes</option>
-        </select>
+            <label for="tab">Select Tab:</label>
+            <select id="tab" name="tab">
+                <option value="pods" {% if selected_tab == 'pods' %} selected {% endif %}>Pods</option>
+                <option value="services" {% if selected_tab == 'services' %} selected {% endif %}>Services</option>
+                <option value="deployments" {% if selected_tab == 'deployments' %} selected {% endif %}>Deployments</option>
+                <option value="configmaps" {% if selected_tab == 'configmaps' %} selected {% endif %}>ConfigMaps</option>
+                <option value="ingresses" {% if selected_tab == 'ingresses' %} selected {% endif %}>Ingresses</option>
+                <option value="secrets" {% if selected_tab == 'secrets' %} selected {% endif %}>Secrets</option>
+                <option value="applications" {% if selected_tab == 'applications' %} selected {% endif %}>Applications</option>
+                <option value="volumes" {% if selected_tab == 'volumes' %} selected {% endif %}>Volumes</option>
+            </select>
 
-        <input type="submit" value="List Resources">
-    </form>
+            <input type="submit" value="List Resources">
+        </form>
 
-    <form action="/apply_policy" method="post">
-        <label for="kyverno_policy">Select Kyverno Policy:</label>
-        <select id="kyverno_policy" name="kyverno_policy">
-            {% for policy in kyverno_policies %}
-                <option value="{{ policy }}">{{ policy }}</option>
-            {% endfor %}
-        </select>
-        <input type="submit" value="Apply Policy">
-    </form>    
+        <form action="/apply_policy" method="post">
+            <label for="kyverno_policy">Select Kyverno Policy:</label>
+            <select id="kyverno_policy" name="kyverno_policy">
+                {% for policy in kyverno_policies %}
+                    <option value="{{ policy }}">{{ policy }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Apply Policy">
+        </form>
+    </div>
 
     <h2>{{ selected_tab | capitalize }} in {{ selected_namespace }}</h2>
     <table border="1">
