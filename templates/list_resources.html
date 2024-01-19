@@ -8,6 +8,7 @@
 <body>
     <h1>Kubernetes Resources</h1>
     <form method="post" action="{{ url_for('list_resources') }}">
+        <input type="hidden" name="engine" value="{{ selected_engine }}">
         <label for="namespace">Select Namespace:</label>
         <select id="namespace" name="namespace">
             {% for ns in namespaces %}
@@ -31,7 +32,8 @@
     </form>
 
     {% if selected_engine == 'kyverno' %}
-        <form action="/apply_policy" method="post">
+        <form action="{{ url_for('apply_policy') }}" method="post">
+            <input type="hidden" name="engine" value="{{ selected_engine }}">
             <label for="kyverno_policy">Select Kyverno Policy:</label>
             <select id="kyverno_policy" name="kyverno_policy">
                 {% if kyverno_policies %}
@@ -46,7 +48,8 @@
             <input type="submit" value="Apply Policy">
         </form>
     {% elif selected_engine == 'jspolicy' %}
-        <form action="/apply_policy" method="post">
+        <form action="{{ url_for('apply_policy') }}" method="post">
+            <input type="hidden" name="engine" value="{{ selected_engine }}">
             <label for="jspolicy_policy">Select JsPolicy Policy:</label>
             <select id="jspolicy_policy" name="jspolicy_policy">
                 {% if jspolicy_policies %}

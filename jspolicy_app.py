@@ -13,6 +13,44 @@ config.load_kube_config()
 JSPOLICY_DIRECTORY = "JsPolicy-YAML"
 KYVERNO_DIRECTORY = "Kyverno-YAML"
 
+def get_applied_policies(engine):
+    try:
+        # Run kubectl command to get applied policies based on the engine
+        command = f"kubectl get {'cluster' if engine == 'jspolicy' else ''}policies -o=json"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
+
+        # Parse the JSON output
+        applied_policies = json.loads(result.stdout)
+
+        # Extract relevant information about each applied policy
+        applied_policies_list = [{'cluster_name': policy['metadata'].get('clusterName', 'N/A'), 'name': policy['metadata']['name']} for policy in applied_policies.get('items', [])]
+
+        print(f"Fetched applied {engine} policies: {applied_policies_list}")
+
+        return applied_policies_list
+
+    except subprocess.CalledProcessError as e:
+        # Handle exceptions (e.g., kubectl command failed)
+        print(f"Error fetching applied {engine} policies: {str(e)}")
+        return []
+
+def get_yaml_policy_names(directory):
+    try:
+        # Get list of files in the specified directory
+        files = [f for f in os.listdir(directory) if f.endswith(".yaml")]
+
+        # Extract policy names from file names
+        policy_names = [os.path.splitext(os.path.basename(file))[0] for file in files]
+
+        print(f"Fetched jspolicy policies from YAML files: {policy_names}")
+
+        return policy_names
+
+    except Exception as e:
+        # Handle exceptions (e.g., directory not found, file read error)
+        print(f"Error fetching jspolicy policies from YAML files: {str(e)}")
+        return []
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     # Create Kubernetes API client
@@ -29,17 +67,17 @@ def index():
     # Fetch jspolicy policies
     return render_template('index.html', namespaces=namespace_list)
 
+selected_engine = 'kyverno'
+
 @app.route('/list_resources', methods=['POST'])
 def list_resources():
+    global selected_engine
     # Create Kubernetes API client
     v1 = client.CoreV1Api()
     apps_v1 = client.AppsV1Api()
     core_v1 = client.CoreV1Api()
     networking_v1 = client.NetworkingV1Api()
     argo_v1 = client.CustomObjectsApi()
-
-    # Initializing engine to kyverno
-    selected_engine = request.form.get('engine', 'kyverno')
 
     # Get selected namespace and tab from the form
     selected_namespace = request.form.get('namespace', 'default')
@@ -49,16 +87,10 @@ def list_resources():
     namespaces = v1.list_namespace()
     namespace_list = [ns.metadata.name for ns in namespaces.items]
 
-    # if selected_engine == 'kyverno':
-    #     policies_directory = KYVERNO_DIRECTORY
-    # elif selected_engine == 'jspolicy':
-    #     policies_directory = JSPOLICY_DIRECTORY
-    # else:
-    #     # Handle invalid selection
-    #     policies_directory = None
-
     # Initialize resource list
     resource_list = []
+
+    selected_engine = request.form.get('engine', 'kyverno')
 
     if selected_tab == 'pods':
         # Get list of pods in the selected namespace
@@ -164,6 +196,14 @@ def list_resources():
             }
             resource_list.append(volume_info)
 
+    if selected_engine == 'kyverno':
+        policy_directory = KYVERNO_DIRECTORY
+    elif selected_engine == 'jspolicy':
+        policy_directory = JSPOLICY_DIRECTORY
+    else:
+        # Handle invalid selection
+        policy_directory = None
+
     return render_template(
         'list_resources.html',
         selected_namespace=selected_namespace,
@@ -171,88 +211,76 @@ def list_resources():
         resources=resource_list,
         namespaces=namespace_list,
         selected_engine=selected_engine,
+        policy_directory=policy_directory,
         jspolicy_policies=get_yaml_policy_names(JSPOLICY_DIRECTORY) if selected_engine == 'jspolicy' else None,
         kyverno_policies=get_yaml_policy_names(KYVERNO_DIRECTORY) if selected_engine == 'kyverno' else None
     )
 
-
-def get_yaml_policy_names(directory):
-    try:
-        # Get list of files in the specified directory
-        files = [f for f in os.listdir(directory) if f.endswith(".yaml")]
-
-        # Extract policy names from file names
-        policy_names = [os.path.splitext(os.path.basename(file))[0] for file in files]
-
-        print(f"Fetched jspolicy policies from YAML files: {policy_names}")
-
-        return policy_names
-
-    except Exception as e:
-        # Handle exceptions (e.g., directory not found, file read error)
-        print(f"Error fetching jspolicy policies from YAML files: {str(e)}")
-        return []
-    
-
-@app.route('/list_jspolicy_policies')
-def list_jspolicy_policies():
-    jspolicy_policies = get_yaml_policy_names(POLICIES_DIRECTORY)
-    print(f"jspolicy policies passed to frontend: {jspolicy_policies}")
-    return render_template('list_jspolicy_policies.html', jspolicy_policies=jspolicy_policies)
-
 @app.route('/apply_policy', methods=['POST'])
 def apply_policy():
-    selected_policy = request.form.get('jspolicy_policy', 'default_policy')
-     
-    command = f"kubectl apply -f {POLICIES_DIRECTORY}/{selected_policy}.yaml"
-    subprocess.run(command, shell=True, check=True)
+    selected_engine = request.form.get('engine', 'kyverno')
+    selected_policy = request.form.get(f'{selected_engine}_policy', 'default_policy')
 
-    # Fetch jspolicy policy details after applying
-    print(f"Fetched jspolicy policy details: {selected_policy}")
-    
-    applied_policies = get_applied_jspolicy_policies()
+    if selected_engine == 'kyverno':
+        policy_directory = KYVERNO_DIRECTORY
+    elif selected_engine == 'jspolicy':
+        policy_directory = JSPOLICY_DIRECTORY
+    else:
+        # Handle invalid selection
+        policy_directory = None
 
-    return render_template('applied_policies.html', applied_policies=applied_policies)
-    
-@app.route('/applied_policies')
+    if policy_directory:
+        command = f"kubectl apply -f {policy_directory}/{selected_policy}.yaml"
+        print(f"Executing command: {command}")  # Print the command being executed
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+        print(result.stdout)
+        print(result.stderr)
+
+        try:
+            result.check_returncode()
+
+            # Fetch policy details after applying
+            print(f"Fetched {selected_engine} policy details: {selected_policy}")
+
+            applied_policies = get_applied_policies(selected_engine)
+
+            return render_template(f'applied_{selected_engine}_policies.html', applied_policies=applied_policies)
+        except subprocess.CalledProcessError as e:
+            # Handle subprocess error
+            print(f"Error applying {selected_engine} policy: {str(e)}")
+            return render_template('error.html', error_message=str(e))
+    else:
+        # Handle invalid policy directory
+        print(f"Invalid policy engine: {selected_engine}")
+
+        return render_template('error.html', error_message="Invalid policy engine")
+
+
+
+@app.route('/applied_policies', methods=['POST'])
 def applied_policies():
-    # Fetch applied jspolicy policies (you need to implement this function)
-    applied_policies = get_applied_jspolicy_policies()
-    
-    return render_template('applied_policies.html', applied_policies=applied_policies)
+    # Fetch applied policies based on the selected engine
+    selected_engine = request.form.get('engine', 'kyverno')
+    applied_policies = get_applied_policies(selected_engine)
 
-def get_applied_jspolicy_policies():
-    try:
-        # Run kubectl command to get applied jspolicy policies
-        command = "kubectl get clusterpolicies -o=json"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
-
-        # Parse the JSON output
-        applied_policies = json.loads(result.stdout)
-
-        # Extract relevant information about each applied policy
-        applied_policies_list = [{'cluster_name': policy['metadata'].get('clusterName', 'N/A'), 'name': policy['metadata']['name']} for policy in applied_policies.get('items', [])]
-
-        print(f"Fetched applied jspolicy policies: {applied_policies_list}")
-
-        return applied_policies_list
-
-    except subprocess.CalledProcessError as e:
-        # Handle exceptions (e.g., kubectl command failed)
-        print(f"Error fetching applied jspolicy policies: {str(e)}")
-        return []
+    return render_template(f'applied_{selected_engine}_policies.html', applied_policies=applied_policies)
 
 @app.route('/delete_policy', methods=['POST'])
 def delete_policy():
-    
-    selected_policy = request.form.get('jspolicy_policy', 'default_policy')
+    selected_engine = request.form.get('engine', 'kyverno')
+    selected_policy = request.form.get(f'{selected_engine}_policy', 'default_policy')
 
-    # Fetch jspolicy policies
-    
+    if selected_engine == 'kyverno':
+        POLICIES_DIRECTORY = KYVERNO_DIRECTORY
+    elif selected_engine == 'jspolicy':
+        POLICIES_DIRECTORY = JSPOLICY_DIRECTORY
+    else:
+        # Handle invalid selection
+        POLICIES_DIRECTORY = None
+
     command = f"kubectl delete -f {POLICIES_DIRECTORY}/{selected_policy}.yaml"
     subprocess.run(command, shell=True, check=True)
-
-    # Fetch jspolicy policy details after applying
     print(f"Fetched jspolicy policy details: {selected_policy}")
 
     response = {
@@ -262,7 +290,7 @@ def delete_policy():
     }
 
     return jsonify(response)
-    
+
 def get_jspolicy_policies():
     try:
         # Create Kubernetes API client for Custom Resources (CR)

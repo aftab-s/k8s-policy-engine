@@ -1,1 +1,3 @@
 helm install jspolicy jspolicy -n jspolicy --create-namespace --repo https://charts.loft.sh
+
+Testing ---> kubectl create deployment nginx-deployment -n default --image=nginx
