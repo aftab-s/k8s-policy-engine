@@ -1,0 +1,23 @@
+<!-- list_kyverno_policies.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyverno Policies</title>
+</head>
+<body>
+    <h1>Kyverno Policies</h1>
+
+    <form action="/apply_policy" method="post">
+        <label for="kyverno_policy">Select Kyverno Policy:</label>
+        <select id="kyverno_policy" name="kyverno_policy">
+            {% for policy in kyverno_policies %}
+                <option value="{{ policy }}">{{ policy }}</option>
+            {% endfor %}
+        </select>
+    
+        <input type="submit" value="Apply Policy">
+    </form>
+</body>
+</html>

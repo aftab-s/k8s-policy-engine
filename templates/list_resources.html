@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Resources</title>
+</head>
+<body>
+    <h1>Kubernetes Resources</h1>
+    <form method="post" action="{{ url_for('list_resources') }}">
+        <label for="namespace">Select Namespace:</label>
+        <select id="namespace" name="namespace">
+            {% for ns in namespaces %}
+                <option value="{{ ns }}" {% if ns == selected_namespace %} selected {% endif %}>{{ ns }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="tab">Select Resources:</label>
+        <select id="tab" name="tab">
+            <option value="pods" {% if selected_tab == 'pods' %} selected {% endif %}>Pods</option>
+            <option value="services" {% if selected_tab == 'services' %} selected {% endif %}>Services</option>
+            <option value="deployments" {% if selected_tab == 'deployments' %} selected {% endif %}>Deployments</option>
+            <option value="configmaps" {% if selected_tab == 'configmaps' %} selected {% endif %}>ConfigMaps</option>
+            <option value="ingresses" {% if selected_tab == 'ingresses' %} selected {% endif %}>Ingresses</option>
+            <option value="secrets" {% if selected_tab == 'secrets' %} selected {% endif %}>Secrets</option>
+            <option value="applications" {% if selected_tab == 'applications' %} selected {% endif %}>Applications</option>
+            <option value="volumes" {% if selected_tab == 'volumes' %} selected {% endif %}>Volumes</option>
+        </select>
+
+        <input type="submit" value="List Resources">
+    </form>
+
+    {% if selected_engine == 'kyverno' %}
+        <form action="/apply_policy" method="post">
+            <label for="kyverno_policy">Select Kyverno Policy:</label>
+            <select id="kyverno_policy" name="kyverno_policy">
+                {% if kyverno_policies %}
+                    {% for policy in kyverno_policies %}
+                        <option value="{{ policy }}">{{ policy }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">No Kyverno Policies</option>
+                {% endif %}
+            </select>
+        
+            <input type="submit" value="Apply Policy">
+        </form>
+    {% elif selected_engine == 'jspolicy' %}
+        <form action="/apply_policy" method="post">
+            <label for="jspolicy_policy">Select JsPolicy Policy:</label>
+            <select id="jspolicy_policy" name="jspolicy_policy">
+                {% if jspolicy_policies %}
+                    {% for policy in jspolicy_policies %}
+                        <option value="{{ policy }}">{{ policy }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">No JsPolicy Policies</option>
+                {% endif %}
+            </select>
+        
+            <input type="submit" value="Apply Policy">
+        </form>
+    {% endif %}  
+
+    <h2>{{ selected_tab | capitalize }} in {{ selected_namespace }}</h2>
+    <table border="1">
+        <tr>
+            {% if selected_tab == 'pods' %}
+                <th>Name</th>
+                <th>Status</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'services' %}
+                <th>Name</th>
+                <th>Type</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'deployments' %}
+                <th>Name</th>
+                <th>Replicas</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'configmaps' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'ingresses' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'secrets' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'applications' %}
+                <th>Name</th>
+                <th>Namespace</th>
+            {% elif selected_tab == 'volumes' %}
+                <th>Name</th>
+                <th>Capacity</th>
+                <th>Namespace</th>
+            {% endif %}
+        </tr>
+        {% for resource in resources %}
+            <tr>
+                {% if selected_tab == 'pods' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.status }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'services' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.type }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'deployments' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.replicas }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'configmaps' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'ingresses' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'secrets' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'applications' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% elif selected_tab == 'volumes' %}
+                    <td>{{ resource.name }}</td>
+                    <td>{{ resource.capacity }}</td>
+                    <td>{{ resource.namespace }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

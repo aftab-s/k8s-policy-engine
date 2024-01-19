@@ -1,0 +1,23 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Policy Engine</title>
+</head>
+<body>
+    <h1>Select Policy Engine</h1>
+
+    <form method="post" action="{{ url_for('list_resources') }}">
+        <label for="engine">Select Policy Engine:</label>
+        <select id="engine" name="engine">
+            <option value="kyverno">Kyverno</option>
+            <option value="jspolicy">JsPolicy</option>
+        </select>
+
+        <input type="submit" value="List Resources">
+    </form>
+</body>
+</html>
