@@ -16,7 +16,7 @@ KYVERNO_DIRECTORY = "Kyverno-YAML"
 def get_applied_policies(engine):
     try:
         # Run kubectl command to get applied policies based on the engine
-        command = f"kubectl get {'cluster' if engine == 'jspolicy' else ''}policies -o=json"
+        command = f"kubectl get {'cluster' if engine == 'kyverno' else 'js'}policies -o=json"
         result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
 
         # Parse the JSON output
