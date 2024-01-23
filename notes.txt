@@ -4,3 +4,26 @@ Testing ---> kubectl create deployment nginx-deployment -n default --image=nginx
 
 Listing Kyverno Policies ---> kubectl get clusterpolicies 
 Listing JsPolicy Policies ---> kubectl get jspolicy
+
+
+def get_jspolicy_policies():
+    try:
+        # Create Kubernetes API client for Custom Resources (CR)
+        custom_api = client.CustomObjectsApi()
+
+        # Fetch jspolicy policies
+        group = 'jspolicy.io'
+        version = 'v1'
+        plural = 'clusterpolicies'
+        policies = custom_api.list_cluster_custom_object(group, version, plural)
+
+        # Extract relevant information about each policy
+        jspolicy_policies = [policy['metadata']['name'] for policy in policies.get('items', [])]
+        print(f"Fetched jspolicy policies: {jspolicy_policies}")
+
+        return jspolicy_policies
+
+    except Exception as e:
+        # Handle exceptions (e.g., jspolicy CRD not found, API server unreachable)
+        print(f"Error fetching jspolicy policies: {str(e)}")
+        return []

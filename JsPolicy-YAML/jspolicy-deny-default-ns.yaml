@@ -3,6 +3,7 @@ apiVersion: policy.jspolicy.com/v1beta1
 kind: JsPolicy
 metadata:
   name: "deny-default-namespace.company.tld"
+  
 spec:
   operations: ["CREATE"]
   resources: ["*"]
