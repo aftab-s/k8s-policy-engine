@@ -13,30 +13,6 @@ config.load_kube_config()
 jspolicy_directory = "JsPolicy-YAML"
 kyverno_directory = "Kyverno-YAML"
 
-def get_applied_policies(engine):
-    try:
-        # Run kubectl command to get applied policies based on the engine
-        command = f"kubectl get {'cluster' if engine == 'kyverno' else 'js'}policies -o=json"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
-
-        # Parse the JSON output
-        applied_policies = json.loads(result.stdout)
-        my_policy = '';
-        if(engine == "kyverno"):         
-            my_policy = get_yaml_policy_names(kyverno_directory)
-        else:
-            my_policy = get_yaml_policy_names(jspolicy_directory)
-        # Extract relevant information about each applied policy
-        applied_policies_list = [{'cluster_name': policy['metadata'].get('clusterName', 'N/A'), 'name': my_policy[0]} for policy in applied_policies.get('items', [])]
-
-        print(f"Fetched applied {engine} policies: {applied_policies_list}")
-
-        return applied_policies_list
-
-    except subprocess.CalledProcessError as e:
-        # Handle exceptions (e.g., kubectl command failed)
-        print(f"Error fetching applied {engine} policies: {str(e)}")
-        return []
 
 def get_yaml_policy_names(directory):
     try:
@@ -54,6 +30,44 @@ def get_yaml_policy_names(directory):
         # Handle exceptions (e.g., directory not found, file read error)
         print(f"Error fetching jspolicy policies from YAML files: {str(e)}")
         return []
+
+def get_applied_policies(engine):
+    try:
+        # Run kubectl command to get applied policies based on the engine
+        command = f"kubectl get {'cluster' if engine == 'kyverno' else 'js'}policies -o=json"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
+
+        # Parse the JSON output
+        applied_policies = json.loads(result.stdout)
+        my_policy = ''
+        if engine == "kyverno":
+            my_policy = get_yaml_policy_names(kyverno_directory)
+        else:
+            my_policy = get_yaml_policy_names(jspolicy_directory)
+
+        # Extract relevant information about each applied policy
+        applied_policies_list = [
+            {
+                'cluster_name': policy['metadata'].get('clusterName', 'N/A'),
+                'name': my_policy[index] if index < len(my_policy) else 'N/A'
+            }
+            for index, policy in enumerate(applied_policies.get('items', []))
+        ]
+
+        print(f"Fetched applied {engine} policies: {applied_policies_list}")
+
+        return applied_policies_list
+
+    except subprocess.CalledProcessError as e:
+        # Handle exceptions (e.g., kubectl command failed)
+        print(f"Error fetching applied {engine} policies: {str(e)}")
+        return []
+
+# Example usage after deleting a policy
+# Assuming 'kyverno-restrict-nodeport' is deleted
+updated_applied_policies = get_applied_policies('kyverno')
+print(f"Updated applied policies: {updated_applied_policies}")
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
